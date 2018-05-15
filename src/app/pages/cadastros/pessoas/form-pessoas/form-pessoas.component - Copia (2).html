@@ -1,0 +1,77 @@
+<div class="row">
+  <div class="col-md-6">
+    <nb-card>
+      <nb-card-header>Identificação do Cliente</nb-card-header>
+      <nb-card-body>
+        <form>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Nome</label>
+            <div class="col-sm-9">
+              <input type="text" class="form-control" id="pessoa-nome" placeholder="Nome">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Telefone</label>
+            <div class="col-sm-9">
+              <input type="tel" class="form-control" id="pessoa-telefone" placeholder="(XX) xxxxx-xxxx">
+            </div>
+          </div>
+          <h5 class="grid-h">Endereço</h5>
+          <div class="form-group row">
+            <label class="col-sm-3 ">CEP</label>
+            <div class="col-sm-9">
+              <input type="text" class="form-control" id="end-cep" placeholder="CEP">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3 ">Nº</label>
+            <div class="col-sm-9">
+              <input type="text" class="form-control" id="end-num" placeholder="Número">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3 ">Endereço</label>
+            <div class="col-sm-9">
+              <input type="text" class="form-control" id="end-end" placeholder="Endereço">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3">Bairro</label>
+            <div class="col-sm-9">
+              <input type="tel" class="form-control" id="end-bairro" placeholder="Bairro">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3">Complemento</label>
+            <div class="col-sm-9">
+              <input type="tel" class="form-control" id="end-complemento" placeholder="Complemento">
+            </div>
+          </div>
+          <div class="form-group row">
+            <label class="col-sm-3">Cidade</label>
+            <div class="col-sm-9">
+              <input type="tel" class="form-control" id="end-cidade" placeholder="Cidade">
+            </div>
+          </div>
+          <mat-accordion>
+            <mat-expansion-panel>
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <h5 class="grid-h">Últimos pedidos</h5>
+                </mat-panel-title>
+                <mat-panel-description>
+                  Pedidos mais recentes do cliente
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+            </mat-expansion-panel>
+          </mat-accordion>
+          <div class="form-group row">
+            <div class="offset-sm-3 col-sm-9">
+              <button type="submit" class="btn btn-primary">Sign in</button>
+            </div>
+          </div>
+        </form>
+      </nb-card-body>
+    </nb-card>
+  </div>
+</div>

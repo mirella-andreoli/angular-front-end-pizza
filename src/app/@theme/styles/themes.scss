@@ -1,0 +1,41 @@
+// @nebular theming framework
+@import '~@nebular/theme/styles/theming';
+// @nebular out of the box themes
+@import '~@nebular/theme/styles/themes';
+
+// which themes you what to enable (empty to enable all)
+$nb-enabled-themes: (default, cosmic);
+
+$nb-themes: nb-register-theme((
+ // app wise variables for each theme
+  sidebar-header-gap: 2rem,
+  sidebar-header-height: initial,
+  sidebar-fg: #2541e0,
+  layout-content-width: 1400px,
+  // header-bg:linear-gradient(to right, #608fcc, #242c9e, #ffffff, #f77541, #a51616),
+  // header-bg:linear-gradient(to bottom, #ffebdb, #fc892a, #e23c3c),
+  header-bg:  #000f53,
+  header-fg: #db0000,
+  header-shadow:  0 4px 8px 0 rgba(0, 0, 0, 0.2),
+  color-fg-highlight: #1d21ff,
+  menu-group-fg: #94b4f0,
+  menu-icon-color: #94b4f0,
+  menu-item-separator: #dddfe2,
+  menu-submenu-active-fg: #000f53,
+  menu-submenu-fg:#94b4f0,
+  menu-active-fg:#000f53,
+  menu-bg: #ffffff,
+  layout-bg:  #eeeeee,
+  font-main: Roboto,
+  font-secondary: Exo,
+), default, default);
+
+$nb-themes: nb-register-theme((
+  // app wise variables for each theme
+  sidebar-header-gap: 2rem,
+  sidebar-header-height: initial,
+  layout-content-width: 1400px,
+
+  font-main: Roboto,
+  font-secondary: Exo,
+), cosmic, cosmic);
