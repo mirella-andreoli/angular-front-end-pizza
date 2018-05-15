@@ -1,10 +1,22 @@
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { AfterViewInit, Component, ViewChild, OnInit } from '@angular/core';
-import { MatPaginator, MatSort, MatTableDataSource} from '@angular/material';
-import { merge, pipe, Observable, BehaviorSubject, of as observableOf } from 'rxjs';
-import { catchError, map, startWith, switchMap } from 'rxjs/operators';
+import { MatDialog} from '@angular/material/dialog';
+import {MatPaginator, MatSort, MatFormField } from '@angular/material';
+import { MatIcon } from '@angular/material/icon';
+import { Pessoa } from '../../../../shared/models/pessoa';
+import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { DataSource } from '@angular/cdk/collections';
+import 'rxjs/add/observable/merge';
+import 'rxjs/add/observable/fromEvent';
+import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/debounceTime';
+import 'rxjs/add/operator/distinctUntilChanged';
+import { AddDialogComponent } from '../dialogs/add/add.dialog.component';
+import { EditDialogComponent } from '../dialogs/edit/edit.dialog.component';
+import { DeleteDialogComponent } from '../dialogs/delete/delete.dialog.component';
 
-
+import { DataService } from '../../../../shared/services/data.service';
 /**
  * @title Table retrieving data through HTTP
  */
@@ -13,73 +25,192 @@ import { catchError, map, startWith, switchMap } from 'rxjs/operators';
   styleUrls: ['grid-pessoas.component.scss'],
   templateUrl: 'grid-pessoas.component.html',
 })
-export class GridPessoasComponent implements AfterViewInit {
-  displayedColumns : string[] =  ['created', 'state', 'number', 'title'];
-  exampleDatabase: ExampleHttpDao | null;
-  dataSource = new MatTableDataSource();
+export class GridPessoasComponent implements OnInit {
+  displayedColumns = ['id', 'title', 'state', 'url', 'created_at', 'updated_at', 'actions'];
+  exampleDatabase: DataService | null;
+  dataSource: ExampleDataSource | null;
+  index: number;
+  id: number;
 
-  resultsLength = 0;
-  isLoadingResults = true;
-  isRateLimitReached = false;
+  constructor(public httpClient: HttpClient,
+    public dialog: MatDialog,
+    public dataService: DataService) { }
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
+  @ViewChild('filter') filter: ElementRef;
 
-  constructor(private http: HttpClient) { }
+  ngOnInit() {
+    this.loadData();
+  }
 
-  ngAfterViewInit() {
-    this.exampleDatabase = new ExampleHttpDao(this.http);
+  refresh() {
+    this.loadData();
+  }
 
-    // If the user changes the sort order, reset back to the first page.
-    this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
+  addNew(pessoa: Pessoa) {
+    const dialogRef = this.dialog.open(AddDialogComponent, {
+      data: { pessoa: pessoa }
+    });
 
-    merge(this.sort.sortChange, this.paginator.page)
-      .pipe(
-        startWith({}),
-        switchMap(() => {
-          this.isLoadingResults = true;
-          return this.exampleDatabase!.getRepoIssues(
-            this.sort.active, this.sort.direction, this.paginator.pageIndex);
-        }),
-        map(data => {
-          // Flip flag to show that loading has finished.
-          this.isLoadingResults = false;
-          this.isRateLimitReached = false;
-          this.resultsLength = data.total_count;
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 1) {
+        // After dialog is closed we're doing frontend updates
+        // For add we're just pushing a new row inside DataService
+        this.exampleDatabase.dataChange.value.push(this.dataService.getDialogData());
+        this.refreshTable();
+      }
+    });
+  }
 
-          return data.items;
-        }),
-        catchError(() => {
-          this.isLoadingResults = false;
-          // Catch if the GitHub API has reached its rate limit. Return empty data.
-          this.isRateLimitReached = true;
-          return observableOf([]);
-        })
-      ).subscribe(data => this.dataSource.data = data);
+  startEdit(i: number, id: number, title: string, state: string, url: string, created_at: string, updated_at: string) {
+    this.id = id;
+    // index row is used just for debugging proposes and can be removed
+    this.index = i;
+    console.log(this.index);
+    const dialogRef = this.dialog.open(EditDialogComponent, {
+      data: { id: id, title: title, state: state, url: url, created_at: created_at, updated_at: updated_at }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 1) {
+        // When using an edit things are little different, firstly we find record inside DataService by id
+        const foundIndex = this.exampleDatabase.dataChange.value.findIndex(x => x.id === this.id);
+        // Then you update that record using data from dialogData (values you enetered)
+        this.exampleDatabase.dataChange.value[foundIndex] = this.dataService.getDialogData();
+        // And lastly refresh table
+        this.refreshTable();
+      }
+    });
+  }
+
+  deleteItem(i: number, id: number, title: string, state: string, url: string) {
+    this.index = i;
+    this.id = id;
+    const dialogRef = this.dialog.open(DeleteDialogComponent, {
+      data: { id: id, title: title, state: state, url: url }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 1) {
+        const foundIndex = this.exampleDatabase.dataChange.value.findIndex(x => x.id === this.id);
+        // for delete we use splice in order to remove single object from DataService
+        this.exampleDatabase.dataChange.value.splice(foundIndex, 1);
+        this.refreshTable();
+      }
+    });
+  }
+
+
+  // If you don't need a filter or a pagination this can be simplified, you just use code from else block
+  private refreshTable() {
+    // if there's a paginator active we're using it for refresh
+    if (this.dataSource._paginator.hasNextPage()) {
+      this.dataSource._paginator.nextPage();
+      this.dataSource._paginator.previousPage();
+      // in case we're on last page this if will tick
+    } else if (this.dataSource._paginator.hasPreviousPage()) {
+      this.dataSource._paginator.previousPage();
+      this.dataSource._paginator.nextPage();
+      // in all other cases including active filter we do it like this
+    } else {
+      this.dataSource.filter = '';
+      this.dataSource.filter = this.filter.nativeElement.value;
+    }
+  }
+
+  public loadData() {
+    this.exampleDatabase = new DataService(this.httpClient);
+    this.dataSource = new ExampleDataSource(this.exampleDatabase, this.paginator, this.sort);
+    Observable.fromEvent(this.filter.nativeElement, 'keyup')
+      .debounceTime(150)
+      .distinctUntilChanged()
+      .subscribe(() => {
+        if (!this.dataSource) {
+          return;
+        }
+        this.dataSource.filter = this.filter.nativeElement.value;
+      });
   }
 }
+export class ExampleDataSource extends DataSource<Pessoa> {
+  _filterChange = new BehaviorSubject('');
 
-export interface GithubApi {
-  items: GithubIssue[];
-  total_count: number;
-}
+  get filter(): string {
+    return this._filterChange.value;
+  }
 
-export interface GithubIssue {
-  created_at: string;
-  number: string;
-  state: string;
-  title: string;
-}
+  set filter(filter: string) {
+    this._filterChange.next(filter);
+  }
 
-/** An example database that the data source uses to retrieve data for the table. */
-export class ExampleHttpDao {
-  constructor(private http: HttpClient) { }
+  filteredData: Pessoa[] = [];
+  renderedData: Pessoa[] = [];
 
-  getRepoIssues(sort: string, order: string, page: number): Observable<GithubApi> {
-    const href = 'https://api.github.com/search/issues';
-    const requestUrl =
-      `${href}?q=repo:angular/material2&sort=${sort}&order=${order}&page=${page + 1}`;
+  constructor(public _exampleDatabase: DataService,
+    public _paginator: MatPaginator,
+    public _sort: MatSort) {
+    super();
+    // Reset to the first page when the user changes the filter.
+    this._filterChange.subscribe(() => this._paginator.pageIndex = 0);
+  }
 
-    return this.http.get<GithubApi>(requestUrl);
+  /** Connect function called by the table to retrieve one stream containing the data to render. */
+  connect(): Observable<Pessoa[]> {
+    // Listen for any changes in the base data, sorting, filtering, or pagination
+    const displayDataChanges = [
+      this._exampleDatabase.dataChange,
+      this._sort.sortChange,
+      this._filterChange,
+      this._paginator.page
+    ];
+
+    this._exampleDatabase.getAllPessoas();
+
+    return Observable.merge(...displayDataChanges).map(() => {
+      // Filter data
+      this.filteredData = this._exampleDatabase.data.slice().filter((pessoa: Pessoa) => {
+        const searchStr = (pessoa.id + pessoa.title + pessoa.url + pessoa.created_at).toLowerCase();
+        return searchStr.indexOf(this.filter.toLowerCase()) !== -1;
+      });
+
+      // Sort filtered data
+      const sortedData = this.sortData(this.filteredData.slice());
+
+      // Grab the page's slice of the filtered sorted data.
+      const startIndex = this._paginator.pageIndex * this._paginator.pageSize;
+      this.renderedData = sortedData.splice(startIndex, this._paginator.pageSize);
+      return this.renderedData;
+    });
+  }
+  disconnect() {
+  }
+
+
+
+  /** Returns a sorted copy of the database data. */
+  sortData(data: Pessoa[]): Pessoa[] {
+    if (!this._sort.active || this._sort.direction === '') {
+      return data;
+    }
+
+    return data.sort((a, b) => {
+      let propertyA: number | string = '';
+      let propertyB: number | string = '';
+
+      switch (this._sort.active) {
+        case 'id': [propertyA, propertyB] = [a.id, b.id]; break;
+        case 'title': [propertyA, propertyB] = [a.title, b.title]; break;
+        case 'state': [propertyA, propertyB] = [a.state, b.state]; break;
+        case 'url': [propertyA, propertyB] = [a.url, b.url]; break;
+        case 'created_at': [propertyA, propertyB] = [a.created_at, b.created_at]; break;
+        case 'updated_at': [propertyA, propertyB] = [a.updated_at, b.updated_at]; break;
+      }
+
+      const valueA = isNaN(+propertyA) ? propertyA : +propertyA;
+      const valueB = isNaN(+propertyB) ? propertyB : +propertyB;
+
+      return (valueA < valueB ? -1 : 1) * (this._sort.direction === 'asc' ? 1 : -1);
+    });
   }
 }

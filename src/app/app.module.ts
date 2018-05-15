@@ -14,9 +14,28 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { ThemeModule } from './@theme/theme.module';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
-
 import { AngularSvgIconModule } from 'angular-svg-icon';
-
+import {
+  MatAutocompleteModule,
+  MatButtonModule,
+  MatCardModule,
+  MatDialogModule,
+  MatGridListModule,
+  MatIconModule,
+  MatInputModule,
+  MatListModule,
+  MatMenuModule,
+  MatProgressBarModule,
+  MatProgressSpinnerModule,
+  MatSliderModule,
+  MatSnackBarModule,
+  MatTooltipModule,
+  MatPaginatorModule,
+  MatSortModule,
+  MatTableModule,
+  MatToolbarModule,
+  MatFormFieldModule
+} from '@angular/material';
 
 @NgModule({
   declarations: [AppComponent],
@@ -26,14 +45,32 @@ import { AngularSvgIconModule } from 'angular-svg-icon';
     HttpClientModule,
     AppRoutingModule,
     AngularSvgIconModule,
-
+    MatAutocompleteModule,
+    MatButtonModule,
+    MatCardModule,
+    MatDialogModule,
+    MatGridListModule,
+    MatIconModule,
+    MatInputModule,
+    MatListModule,
+    MatMenuModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
+    MatSliderModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatTableModule,
+    MatToolbarModule,
+    MatFormFieldModule,
     NgbModule.forRoot(),
     ThemeModule.forRoot(),
     CoreModule.forRoot(),
   ],
   bootstrap: [AppComponent],
   providers: [
-    { provide: APP_BASE_HREF, useValue: '/' },
+    { provide: APP_BASE_HREF, useValue: '/' }
   ],
 })
 export class AppModule {

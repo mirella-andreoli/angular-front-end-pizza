@@ -5,6 +5,7 @@
  */
 import { Component, AfterViewInit } from '@angular/core';
 import { AnalyticsService } from './@core/utils/analytics.service';
+import { MatFormField } from '@angular/material';
 
 @Component({
   selector: 'ngx-app',
